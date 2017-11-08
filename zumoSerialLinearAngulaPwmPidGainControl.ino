@@ -28,8 +28,8 @@ struct pidParam {   //structure for PID parameters
   double kd;
   };
   
-pidParam motorL = {300,50,0}; //giving initial values of PID for motor Left
-pidParam motorR = {300,50,0}; //giving initial values of PID for motor Right
+pidParam motorL = {250,50,0}; //giving initial values of PID for motor Left
+pidParam motorR = {250,50,0}; //giving initial values of PID for motor Right
 
 #include <PID_v1.h>
 double measuredVelL = 0, measuredVelR = 0;  //Our required
@@ -40,7 +40,7 @@ PID pidL(&measuredVelL, &pwmL, &velL, motorL.kp, motorL.ki, motorL.kd, DIRECT);
 PID pidR(&measuredVelR, &pwmR, &velR, motorL.kp, motorR.ki, motorR.kd, DIRECT);
 
 uint16_t batteryLevel = 0;
-uint16_t battery_low = 8150; //7.15mv
+uint16_t battery_low = 7150; //7.15mv
 //      PID////
 boolean pidActive = false;              // Code itself deal with this parameter
 
@@ -75,16 +75,16 @@ void loop() {
     interpretmySerialData();
     stringComplete = false;
     inputString="";
-    Serial.println(readBatteryMillivolts());
+//    Serial.println(readBatteryMillivolts());
   }
 batteryLevel = readBatteryMillivolts();
-  if(batteryLevel<=(battery_low-50) && !usbPowerPresent())
+ /* if(batteryLevel<=(battery_low-100) && !usbPowerPresent())
   { 
     if(!buzzer.isPlaying())
     buzzer.playFromProgramSpace(fugue);
     }
-  else if(batteryLevel>=(battery_low+50) || usbPowerPresent())
-  {  buzzer.stopPlaying();}
+  else if(batteryLevel>=(battery_low+100) || usbPowerPresent())
+  {  buzzer.stopPlaying();}*/
   
   if (currentMillis - previousMillis >= interval) { //timed  loop for measuring Velocities
     previousMillis = currentMillis;
@@ -102,9 +102,11 @@ batteryLevel = readBatteryMillivolts();
       motors.setLeftSpeed(pwmL);
       motors.setRightSpeed(pwmR);
   }
-  if (currentMillis - timeOutPreviousMillis >= velocityTimeOut ) {  // Break Velocity after Certain Time.
+
+  if (int(currentMillis - timeOutPreviousMillis) >= velocityTimeOut ) {  // Break Velocity after Certain Time.
       motors.setLeftSpeed(0);
       motors.setRightSpeed(0);
+      //Serial.println("Hello");
       pidActive = false;
   }
 }
