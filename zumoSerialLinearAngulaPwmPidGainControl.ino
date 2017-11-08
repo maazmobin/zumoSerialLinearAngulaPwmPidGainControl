@@ -1,7 +1,7 @@
 #define encoderRevCounts 1670   //ticks per revolution of wheel belt
-#define circumference 0.217   //m //on the bassis a belt
-#define diameter_zumo 0.069  //m  //taken out from circumference
-#define length_zumo 0.085   //m   // distance between wheels
+#define circumference 217   //mm //on the bassis a belt
+#define diameter_zumo 69  //mm  //taken out from circumference
+#define length_zumo 85   //mm   // distance between wheels
 #include <Wire.h>
 #include <Zumo32U4.h>
 
@@ -17,7 +17,7 @@ int interval = 10; // in ms         // PID sample interval
 unsigned long currentMillis = 0;
 
 unsigned long timeOutPreviousMillis = 0;  //Velocity Time Out.
-int velocityTimeOut = 1000; //ms  // changing this will change the velocity time out        
+int velocityTimeOut = 5000; //ms  // changing this will change the velocity time out        
 
 String inputString = "";         // a String to hold incoming data
 boolean stringComplete = false;  // whether the string is complete
@@ -28,8 +28,8 @@ struct pidParam {   //structure for PID parameters
   double kd;
   };
   
-pidParam motorL = {250,50,0}; //giving initial values of PID for motor Left
-pidParam motorR = {250,50,0}; //giving initial values of PID for motor Right
+pidParam motorL = {1,0,0}; //giving initial values of PID for motor Left
+pidParam motorR = {1,0,0}; //giving initial values of PID for motor Right
 
 #include <PID_v1.h>
 double measuredVelL = 0, measuredVelR = 0;  //Our required
@@ -53,7 +53,7 @@ const char fugue[] PROGMEM =
 void setup() {
   // put your setup code here, to run once:
   mySerial.begin(9600);                   //initialize mySerial Baudrate
-  Serial.begin(115200);
+  Serial.begin(9600);
   initPID();                            //initializing and defining PID parameters
   velL = 00; // "m/s" 
   velR = 00; 
@@ -78,22 +78,25 @@ void loop() {
 //    Serial.println(readBatteryMillivolts());
   }
 batteryLevel = readBatteryMillivolts();
- /* if(batteryLevel<=(battery_low-100) && !usbPowerPresent())
+  if(batteryLevel<=(battery_low-100) && !usbPowerPresent())
   { 
     if(!buzzer.isPlaying())
     buzzer.playFromProgramSpace(fugue);
     }
   else if(batteryLevel>=(battery_low+100) || usbPowerPresent())
-  {  buzzer.stopPlaying();}*/
+  {  buzzer.stopPlaying();}
   
-  if (currentMillis - previousMillis >= interval) { //timed  loop for measuring Velocities
+  if (int(currentMillis - previousMillis) >= interval) { //timed  loop for measuring Velocities
     previousMillis = currentMillis;
     encCurrL = encoders.getCountsAndResetLeft();  //encoderLeft
     encCurrR = encoders.getCountsAndResetRight(); //
-    float distance1 = (float)encCurrL/encoderRevCounts;
-    measuredVelL = (float)(distance1/interval)*1000.0;
-    float distance2 = (float)encCurrR/encoderRevCounts;
-    measuredVelR = (float)(distance2/interval)*1000.0;
+    float distance1 = (encCurrL/(float)encoderRevCounts)*1000;
+    measuredVelL = float(distance1/interval)*circumference;
+    float distance2 = (encCurrR/(float)encoderRevCounts)*1000;
+    measuredVelR = float(distance2/interval)*circumference;
+  /*  Serial.print(measuredVelL);
+    Serial.print(" , ");
+    Serial.println(measuredVelR);    */
     }
 
   if(pidActive){
@@ -121,12 +124,10 @@ void interpretmySerialData(void) {
       c1 = inputString.indexOf(',') + 1;
       c2 = inputString.indexOf(',', c1);
       val1 = inputString.substring(c1, c2).toFloat();
-      val1 = val1/1000.0;
-      val1 = constrain( val1, -1 , 1 );
+      val1 = constrain( val1, -300 , 300 );
       c1 = c2 + 1;
       val2 = inputString.substring(c1).toFloat();
-      val2 = val2/1000.0;
-      val2 = constrain( val2, -1 , 1 );
+      val2 = constrain( val2, -300 , 300 );
       velL=val1;
       velR=val2;
       pidActive = true;
