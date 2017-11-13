@@ -28,8 +28,8 @@ struct pidParam {   //structure for PID parameters
   double kd;
   };
   
-pidParam motorL = {1,0,0}; //giving initial values of PID for motor Left
-pidParam motorR = {1,0,0}; //giving initial values of PID for motor Right
+pidParam motorL = {1,0.1,0}; //giving initial values of PID for motor Left
+pidParam motorR = {1,0.1,0}; //giving initial values of PID for motor Right
 
 #include <PID_v1.h>
 double measuredVelL = 0, measuredVelR = 0;  //Our required
@@ -94,9 +94,9 @@ batteryLevel = readBatteryMillivolts();
     measuredVelL = float(distance1/interval)*circumference;
     float distance2 = (encCurrR/(float)encoderRevCounts)*1000;
     measuredVelR = float(distance2/interval)*circumference;
-  /*  Serial.print(measuredVelL);
+    Serial.print(measuredVelL);
     Serial.print(" , ");
-    Serial.println(measuredVelR);    */
+    Serial.println(measuredVelR);    
     }
 
   if(pidActive){
@@ -132,7 +132,7 @@ void interpretmySerialData(void) {
       velR=val2;
       pidActive = true;
       timeOutPreviousMillis = millis();
-      Serial.println(val1);
+      Serial.println(val2);
       Serial.println('d');
       break;
     case 'L':
