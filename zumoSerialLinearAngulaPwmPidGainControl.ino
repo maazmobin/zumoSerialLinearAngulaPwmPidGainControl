@@ -17,7 +17,7 @@ int interval = 10; // in ms         // PID sample interval
 unsigned long currentMillis = 0;
 
 unsigned long timeOutPreviousMillis = 0;  //Velocity Time Out.
-int velocityTimeOut = 5000; //ms  // changing this will change the velocity time out        
+int velocityTimeOut = 1000; //ms  // changing this will change the velocity time out        
 
 String inputString = "";         // a String to hold incoming data
 boolean stringComplete = false;  // whether the string is complete
@@ -28,8 +28,8 @@ struct pidParam {   //structure for PID parameters
   double kd;
   };
   
-pidParam motorL = {1,0.1,0}; //giving initial values of PID for motor Left
-pidParam motorR = {1,0.1,0}; //giving initial values of PID for motor Right
+pidParam motorL = {0.8,1,0}; //giving initial values of PID for motor Left
+pidParam motorR = {0.8,1,0}; //giving initial values of PID for motor Right
 
 #include <PID_v1.h>
 double measuredVelL = 0, measuredVelR = 0;  //Our required
@@ -42,7 +42,8 @@ PID pidR(&measuredVelR, &pwmR, &velR, motorL.kp, motorR.ki, motorR.kd, DIRECT);
 uint16_t batteryLevel = 0;
 uint16_t battery_low = 7150; //7.15mv
 //      PID////
-boolean pidActive = false;              // Code itself deal with this parameter
+boolean pidActive1 = false;              // Code itself deal with this parameter
+boolean pidActive2 = false;
 
 Zumo32U4Buzzer buzzer;
 
@@ -63,9 +64,6 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  /*Serial.print(measuredVelL);
-  Serial.print(", ");
-  Serial.println(measuredVelR);*/
   currentMillis = millis();
   mySerialRead();                               //Reading the mySerial Command
   if(stringComplete){
@@ -99,10 +97,12 @@ batteryLevel = readBatteryMillivolts();
     Serial.println(measuredVelR);    
     }
 
-  if(pidActive){
+  if(pidActive1){
       pidL.Compute();
-      pidR.Compute();
       motors.setLeftSpeed(pwmL);
+  }
+    if(pidActive2){
+      pidR.Compute();
       motors.setRightSpeed(pwmR);
   }
 
@@ -110,7 +110,8 @@ batteryLevel = readBatteryMillivolts();
       motors.setLeftSpeed(0);
       motors.setRightSpeed(0);
       //Serial.println("Hello");
-      pidActive = false;
+      pidActive1 = false;
+      pidActive2 = false;
   }
 }
 
@@ -128,9 +129,22 @@ void interpretmySerialData(void) {
       c1 = c2 + 1;
       val2 = inputString.substring(c1).toFloat();
       val2 = constrain( val2, -300 , 300 );
+      pidActive1 = true;
+      pidActive2 = true;
+      if(val1 == 0)
+      {
+     // pidL.SetMode(MANUAL);
+      motors.setLeftSpeed(0);
+      pidActive1 = false;
+        }
+      if(val2 == 0)
+      {
+     // pidR.SetMode(MANUAL);
+      motors.setRightSpeed(0);
+      pidActive2 = false;
+        }
       velL=val1;
       velR=val2;
-      pidActive = true;
       timeOutPreviousMillis = millis();
       Serial.println(val2);
       Serial.println('d');
@@ -148,7 +162,8 @@ void interpretmySerialData(void) {
       motors.setRightSpeed(val2);
       Serial.println('l');
       timeOutPreviousMillis = millis();
-      pidActive = false;
+      pidActive1 = false;
+      pidActive2 = false;
       break;
     case 'W':
       // COMMAND:  W,linear_speed,angular_speed\n
@@ -171,7 +186,8 @@ void interpretmySerialData(void) {
       Serial.print(velL);
       Serial.print(" ");
       Serial.println(velR);
-      pidActive = true;
+      pidActive1 = true;
+      pidActive2 = true;
       timeOutPreviousMillis = millis();
       Serial.println('w');
       break;
