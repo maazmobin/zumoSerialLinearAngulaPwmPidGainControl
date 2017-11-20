@@ -242,8 +242,13 @@ void mySerialRead(void)
     while (mySerial.available()) {
       char inChar = (char)mySerial.read();
       inputString += inChar;
-      if (inChar == '\n') {
+      if (inChar == '\n' && mySerial.available()== 0) {
         stringComplete = true;
+        break;
+      }
+      else if (inChar == '\n' && mySerial.available()== 1) {
+      inputString = "";
+      stringComplete = false;
       }
     }
   }
